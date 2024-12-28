@@ -1,10 +1,8 @@
 = dsimage
 
-Simple application for optimizing images for Web.
+NOTE: Its use case is very narrow and was created as an **4h hackaton experiment to learn Rust language**.
 
-NOTE: Its use case is very narrow and was created as an **experiment**.
-
-Image optimization has been written in Rust.
+Simple application for optimizing images for Web written in Rust.
 
 Program works in CLI environment, taking image filename as first and only argument, i.e.:
 
