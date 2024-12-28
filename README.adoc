@@ -9,22 +9,22 @@ Image optimization has been written in Rust.
 Program works in CLI environment, taking image filename as first and only argument, i.e.:
 
 [source,shell]
-====
+----
 dsimage my_image.jpg
-====
+----
 
 Results are saved in `optimized` directory, where each file is greatly reduced in size,
 three thumbnails are generated as well as grayscale representation of an image.
 
 == Installation
 
-Windows 64bit *.exe and Linux x64_86 binaries are included.
+Windows 64bit *.exe, MacOS *.app and Linux x64_86 binary are included in latest release sections.
 
 == Building from sources
 
 You need Rust installed locally. To build release executable run:
 
 [source,shell]
-====
+----
 cargo build --release
-====
+----
