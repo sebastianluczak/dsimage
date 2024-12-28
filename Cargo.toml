@@ -1,0 +1,8 @@
+[package]
+name = "dsimage" # the name of the package
+version = "0.1.0"    # the current version, obeying semver
+authors = ["Sebastian Luczak <sebastian.luczak1.ctr@sabre.com>"]
+edition = "2021"
+
+[dependencies]
+image = "0.25.5"
