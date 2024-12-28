@@ -33,13 +33,13 @@ fn process_image(mut file_name: String) -> DynamicImage {
     println!("Width {:?}", img.width());
 
     if img.height() > img.width() {
-        println!("Detected horizontal image...");
+        println!("Detected vertical image...");
         if img.height() >= 2000 {
             println!("Image is too big, resizing to 2000 px in height and maintaining aspect ratio: {:?}", img.height() / 2000);
             img.resize(img.width(), 2000, FilterType::Lanczos3).save(format!("optimized/{file_name}.jpg")).unwrap();
         }
     } else {
-        println!("Detected vertical image...");
+        println!("Detected horizontal image...");
         if img.width() >= 2000 {
             println!("Image is too big, resizing to 2000 px in width and height: {:?}", img.width() / 2000);
             img.resize(2000, img.height(), FilterType::Lanczos3).save(format!("optimized/{file_name}.jpg")).unwrap();
