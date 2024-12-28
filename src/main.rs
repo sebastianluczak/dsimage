@@ -1,67 +1,98 @@
 use image::imageops::FilterType;
-use std::fs;
-use std::io;
+use image::{DynamicImage, GenericImageView};
 use std::env;
+use std::fs;
+use std::path::{Path, PathBuf};
 use std::process::exit;
-use image::{DynamicImage};
 
-extern crate image;
-
-fn get_filename() -> String {
+fn get_filename() -> PathBuf {
     let mut args = env::args();
     args.next();
 
     if let Some(first_arg) = args.next() {
-        first_arg
+        PathBuf::from(first_arg)
     } else {
-        println!("No arguments were passed!");
+        eprintln!("Usage: <program> <image_file>");
         exit(1);
     }
 }
 
-fn create_output_directories() -> io::Result<()> {
+fn create_output_directories() -> Result<(), std::io::Error> {
     fs::create_dir_all("optimized/thumbnails")?;
-    println!("Directories created!");
+    println!("Output directories created!");
     Ok(())
 }
 
-fn process_image(mut file_name: String) -> DynamicImage {
-    println!("Opening image {:?}..", file_name);
-    let img = image::open(file_name.clone()).unwrap();
-    file_name = file_name.replace(".jpg", "").replace(".png", "");
-    println!("Height {:?}", img.height());
-    println!("Width {:?}", img.width());
-
-    if img.height() > img.width() {
-        println!("Detected vertical image...");
-        if img.height() >= 2000 {
-            println!("Image is too big, resizing to 2000 px in height and maintaining aspect ratio: {:?}", img.height() / 2000);
-            img.resize(img.width(), 2000, FilterType::Lanczos3).save(format!("optimized/{file_name}.jpg")).unwrap();
-        }
-    } else {
-        println!("Detected horizontal image...");
-        if img.width() >= 2000 {
-            println!("Image is too big, resizing to 2000 px in width and height: {:?}", img.width() / 2000);
-            img.resize(2000, img.height(), FilterType::Lanczos3).save(format!("optimized/{file_name}.jpg")).unwrap();
-        }
-    }
-
-    img.grayscale().resize(800, img.height(), FilterType::Lanczos3).save(format!("optimized/{file_name}_grayscale.jpg")).unwrap();
-    img
+fn resize_and_save(image: &DynamicImage, target_width: u32, file_path: &Path) -> Result<(), image::ImageError> {
+    let aspect_ratio = image.height() as f32 / image.width() as f32;
+    let target_height = (target_width as f32 * aspect_ratio) as u32;
+    let resized = image.resize(target_width, target_height, FilterType::Lanczos3);
+    resized.save(file_path)?;
+    Ok(())
 }
 
-fn create_thumbnails(mut file_name: String, image: DynamicImage) {
+fn process_image(file_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    println!("Opening image {:?}...", file_path);
+
+    // Open the image
+    let img = image::open(file_path)?;
+
+    // Get file name without extension
+    let file_stem = file_path.file_stem().unwrap_or_default();
+    let output_base = Path::new("optimized").join(file_stem);
+
+    // Resize if needed
+    let (width, height) = img.dimensions();
+    println!("Image dimensions: {}x{}", width, height);
+
+    if width > 2000 || height > 2000 {
+        let resized_path = output_base.with_extension("jpg");
+        println!("Resizing large image to fit within 2000px...");
+        resize_and_save(&img, 2000, &resized_path)?;
+    }
+
+    // Create grayscale version
+    let grayscale_path = output_base.with_file_name(format!("{}_grayscale.jpg", file_stem.to_string_lossy()));
+    println!("Creating grayscale version...");
+    let grayscale = img.grayscale();
+    resize_and_save(&grayscale, 800, &grayscale_path)?;
+
+    Ok(())
+}
+
+fn create_thumbnails(file_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("Creating thumbnails...");
-    file_name = file_name.replace(".jpg", "").replace(".png", "");
-    image.resize(1200, image.height(), FilterType::Lanczos3).save(format!("optimized/thumbnails/{file_name}_1200.jpg")).unwrap();
-    image.resize(800, image.height(), FilterType::Lanczos3).save(format!("optimized/thumbnails/{file_name}_800.jpg")).unwrap();
-    image.resize(480, image.height(), FilterType::Lanczos3).save(format!("optimized/thumbnails/{file_name}_480.jpg")).unwrap();
+
+    let img = image::open(file_path)?;
+    let file_stem = file_path.file_stem().unwrap_or_default();
+    let thumbnail_base = Path::new("optimized/thumbnails").join(file_stem);
+
+    for &size in &[1200, 800, 480] {
+        let thumb_path = thumbnail_base.with_file_name(format!("{}_{}.jpg", file_stem.to_string_lossy(), size));
+        resize_and_save(&img, size, &thumb_path)?;
+    }
+
     println!("Thumbnails created!");
+    Ok(())
 }
 
 fn main() {
     let image_filename = get_filename();
-    create_output_directories().expect("Directories could not be created.");
-    let processed_image = process_image(image_filename.clone());
-    create_thumbnails(image_filename, processed_image);
+
+    if let Err(err) = create_output_directories() {
+        eprintln!("Error creating output directories: {}", err);
+        exit(1);
+    }
+
+    if let Err(err) = process_image(&image_filename) {
+        eprintln!("Error processing image: {}", err);
+        exit(1);
+    }
+
+    if let Err(err) = create_thumbnails(&image_filename) {
+        eprintln!("Error creating thumbnails: {}", err);
+        exit(1);
+    }
+
+    println!("Image processing completed successfully!");
 }

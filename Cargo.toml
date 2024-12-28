@@ -1,7 +1,7 @@
 [package]
-name = "dsimage" # the name of the package
-version = "0.1.0"    # the current version, obeying semver
-authors = ["Sebastian Luczak <sebastian.luczak1.ctr@sabre.com>"]
+name = "dsimage"
+version = "0.2.0"
+authors = ["Sebastian Luczak <sebastian.m.luczak@gmail.com>"]
 edition = "2021"
 
 [dependencies]
