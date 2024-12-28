@@ -1,6 +1,6 @@
 [package]
 name = "dsimage"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Sebastian Luczak <sebastian.m.luczak@gmail.com>"]
 edition = "2021"
 
